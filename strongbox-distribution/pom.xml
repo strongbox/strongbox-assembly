@@ -9,6 +9,7 @@
         <groupId>org.carlspring.strongbox</groupId>
         <artifactId>strongbox-parent</artifactId>
         <version>1.0-SNAPSHOT</version>
+        <relativePath/>
     </parent>
 
     <artifactId>strongbox-distribution</artifactId>
@@ -346,7 +347,7 @@
                 </executions>
                 <configuration>
                     <descriptor>src/main/assembly/distribution.xml</descriptor>
-                    <finalName>strongbox-distribution-${version}</finalName>
+                    <finalName>strongbox-distribution-${project.version}</finalName>
                 </configuration>
             </plugin>
         </plugins>
