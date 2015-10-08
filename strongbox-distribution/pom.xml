@@ -367,6 +367,8 @@
                     <description>Strongbox distribution version ${project.version}.</description>
                     <releaseName>${project.version}</releaseName>
                     <tag>${project.version}</tag>
+                    
+                    <overwriteArtifact>true</overwriteArtifact>
 
                     <fileSets>
                         <fileSet>
