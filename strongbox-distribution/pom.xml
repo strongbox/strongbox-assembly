@@ -14,7 +14,7 @@
 
     <artifactId>strongbox-distribution</artifactId>
     <version>1.0-SNAPSHOT</version>
-    <packaging>jar</packaging>
+    <packaging>pom</packaging>
 
     <name>Strongbox: Distribution</name>
     <description>The Strongbox distribution.</description>
@@ -34,6 +34,13 @@
     </organization>
 
     <inceptionYear>2015</inceptionYear>
+
+    <scm>
+        <connection>scm:git:https://github.com/strongbox/strongbox-assembly.git</connection>
+        <developerConnection>scm:git:https://github.com/strongbox/strongbox-assembly.git</developerConnection>
+        <url>https://github.com/strongbox/strongbox-assembly/tree/${project.scm.tag}</url>
+        <tag>master</tag>
+    </scm>
 
     <properties>
         <dir.assembly>${project.build.directory}/assembly</dir.assembly>
@@ -189,7 +196,7 @@
                                     <version>${project.version}</version>
                                     <type>war</type>
 
-                                    <overWrite>true</overWrite>
+                                        <overWrite>true</overWrite>
                                     <outputDirectory>${dir.strongbox.standalone}/webapp</outputDirectory>
                                     <excludes>META-INF/MANIFEST.MF,META-INF/maven/**</excludes>
                                     <includes>**/**</includes>
@@ -348,7 +355,38 @@
                 <configuration>
                     <descriptor>src/main/assembly/distribution.xml</descriptor>
                     <finalName>strongbox-distribution-${project.version}</finalName>
+                    <appendAssemblyId>false</appendAssemblyId>
                 </configuration>
+            </plugin>
+
+            <plugin>
+                <groupId>de.jutzig</groupId>
+                <artifactId>github-release-plugin</artifactId>
+                <version>1.1.1</version>
+                <configuration>
+                    <description>Strongbox distribution version ${project.version}.</description>
+                    <releaseName>${project.version}</releaseName>
+                    <tag>${project.version}</tag>
+
+                    <fileSets>
+                        <fileSet>
+                            <directory>${project.build.directory}</directory>
+                            <includes>
+                                <include>${project.artifactId}*.tar.gz</include>
+                                <include>${project.artifactId}*.zip</include>
+                            </includes>
+                        </fileSet>
+                    </fileSets>
+                </configuration>
+
+                <executions>
+                    <execution>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>release</goal>
+                        </goals>
+                    </execution>
+                </executions>
             </plugin>
         </plugins>
     </build>
