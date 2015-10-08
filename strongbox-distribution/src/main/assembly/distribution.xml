@@ -33,9 +33,10 @@
             <directory>target/assembly/strongbox-${project.version}/bin</directory>
             <outputDirectory>bin</outputDirectory>
             <includes>
-                <include>wrapper-linux-x86-32</include>
-                <include>wrapper-macosx-universal-32</include>
-                <include>wrapper-solaris-x86-32</include>
+                <include>wrapper-linux-x86-*</include>
+                <include>wrapper-macosx-universal-*</include>
+                <include>wrapper-solaris-x86-*</include>
+                <include>wrapper-windows-x86-*</include>
             </includes>
             <fileMode>0755</fileMode>
         </fileSet>
