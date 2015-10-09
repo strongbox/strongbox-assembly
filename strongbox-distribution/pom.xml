@@ -358,38 +358,6 @@
                     <appendAssemblyId>false</appendAssemblyId>
                 </configuration>
             </plugin>
-
-            <plugin>
-                <groupId>de.jutzig</groupId>
-                <artifactId>github-release-plugin</artifactId>
-                <version>1.1.1</version>
-                <configuration>
-                    <description>Strongbox distribution version ${project.version}.</description>
-                    <releaseName>${project.version}</releaseName>
-                    <tag>${project.version}</tag>
-                    
-                    <overwriteArtifact>true</overwriteArtifact>
-
-                    <fileSets>
-                        <fileSet>
-                            <directory>${project.build.directory}</directory>
-                            <includes>
-                                <include>${project.artifactId}*.tar.gz</include>
-                                <include>${project.artifactId}*.zip</include>
-                            </includes>
-                        </fileSet>
-                    </fileSets>
-                </configuration>
-
-                <executions>
-                    <execution>
-                        <phase>package</phase>
-                        <goals>
-                            <goal>release</goal>
-                        </goals>
-                    </execution>
-                </executions>
-            </plugin>
         </plugins>
     </build>
 
@@ -441,5 +409,50 @@
             <version>1.9</version>
         </dependency>
     </dependencies>
+
+    <profiles>
+        <profile>
+            <id>deploy-release-artifact-to-github</id>
+            <activation>
+                <activeByDefault>false</activeByDefault>
+            </activation>
+
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>de.jutzig</groupId>
+                        <artifactId>github-release-plugin</artifactId>
+
+                        <configuration>
+                            <description>Strongbox distribution version ${project.version}.</description>
+                            <releaseName>${project.version}</releaseName>
+                            <tag>${project.version}</tag>
+
+                            <overwriteArtifact>true</overwriteArtifact>
+
+                            <fileSets>
+                                <fileSet>
+                                    <directory>${project.build.directory}</directory>
+                                    <includes>
+                                        <include>${project.artifactId}*.tar.gz</include>
+                                        <include>${project.artifactId}*.zip</include>
+                                    </includes>
+                                </fileSet>
+                            </fileSets>
+                        </configuration>
+
+                        <executions>
+                            <execution>
+                                <phase>package</phase>
+                                <goals>
+                                    <goal>release</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+    </profiles>
 
 </project>
