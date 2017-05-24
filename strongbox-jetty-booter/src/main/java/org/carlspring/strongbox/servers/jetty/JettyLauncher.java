@@ -1,10 +1,17 @@
 
 package org.carlspring.strongbox.servers.jetty;
 
-import org.eclipse.jetty.server.Server;
-import org.eclipse.jetty.webapp.WebAppContext;
+import org.carlspring.strongbox.config.StrongboxWebInitializer;
 
 import java.io.File;
+
+import org.eclipse.jetty.annotations.AnnotationConfiguration;
+import org.eclipse.jetty.plus.webapp.EnvConfiguration;
+import org.eclipse.jetty.plus.webapp.PlusConfiguration;
+import org.eclipse.jetty.server.Server;
+import org.eclipse.jetty.util.ConcurrentHashSet;
+import org.eclipse.jetty.webapp.*;
+import org.springframework.web.WebApplicationInitializer;
 
 /**
  * @author mtodorov
@@ -43,6 +50,19 @@ public class JettyLauncher
         context.setContextPath(getContextPath());
         context.setParentLoaderPriority(true);
 
+        context.setAttribute(AnnotationConfiguration.CLASS_INHERITANCE_MAP, createClassMap());
+
+        context.setConfigurations(new Configuration[]{ new AnnotationConfiguration(),
+                                                       new WebInfConfiguration(),
+                                                       new WebXmlConfiguration(),
+                                                       new MetaInfConfiguration(),
+                                                       new FragmentConfiguration(),
+                                                       new EnvConfiguration(),
+                                                       new PlusConfiguration(),
+                                                       new JettyWebXmlConfiguration()
+                                                      });
+
+
         final File dir = new File("temp");
         //noinspection ResultOfMethodCallIgnored
         dir.mkdirs();
@@ -76,6 +96,16 @@ public class JettyLauncher
         return server;
     }
 
+    private AnnotationConfiguration.ClassInheritanceMap createClassMap()
+    {
+        AnnotationConfiguration.ClassInheritanceMap classMap = new AnnotationConfiguration.ClassInheritanceMap();
+        ConcurrentHashSet<String> impl = new ConcurrentHashSet<>();
+        impl.add(StrongboxWebInitializer.class.getName());
+        classMap.put(WebApplicationInitializer.class.getName(), impl);
+
+        return classMap;
+    }
+
     public void startExplodedInstance()
             throws Exception
     {
@@ -83,6 +113,7 @@ public class JettyLauncher
 
         server = createExplodedServerInstance();
         server.start();
+        // server.dump(System.err);
         server.join();
     }
 
