@@ -1,10 +1,25 @@
 
 package org.carlspring.strongbox.servers.jetty;
 
-import org.eclipse.jetty.server.Server;
-import org.eclipse.jetty.webapp.WebAppContext;
-
 import java.io.File;
+import java.io.IOException;
+import java.nio.file.DirectoryStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
+
+import org.eclipse.jetty.annotations.AnnotationConfiguration;
+import org.eclipse.jetty.annotations.AnnotationConfiguration.ClassInheritanceMap;
+import org.eclipse.jetty.plus.webapp.EnvConfiguration;
+import org.eclipse.jetty.plus.webapp.PlusConfiguration;
+import org.eclipse.jetty.server.Server;
+import org.eclipse.jetty.util.ConcurrentHashSet;
+import org.eclipse.jetty.webapp.Configuration;
+import org.eclipse.jetty.webapp.FragmentConfiguration;
+import org.eclipse.jetty.webapp.JettyWebXmlConfiguration;
+import org.eclipse.jetty.webapp.MetaInfConfiguration;
+import org.eclipse.jetty.webapp.WebAppContext;
+import org.eclipse.jetty.webapp.WebInfConfiguration;
+import org.eclipse.jetty.webapp.WebXmlConfiguration;
 
 /**
  * @author mtodorov
@@ -33,37 +48,95 @@ public class JettyLauncher
         this.basedir = basedir;
     }
 
-    public Server createExplodedServerInstance()
+    public Server createExplodedServerInstance() throws ClassNotFoundException, IOException
     {
         Server server = new Server(getPort());
 
         WebAppContext context = new WebAppContext();
-        context.setDescriptor(context + "/WEB-INF/web.xml");
         context.setResourceBase(getBasedir());
         context.setContextPath(getContextPath());
-        context.setParentLoaderPriority(true);
 
+        File baseContextFile = context.getBaseResource().getFile();
+        String baseContextPath = baseContextFile.getAbsolutePath();
+        context.setDescriptor(baseContextPath + "/WEB-INF/web.xml");
+        
+        context.setConfigurations(new Configuration[] 
+                { 
+                    new AnnotationConfiguration(),
+                    new WebInfConfiguration(), 
+                    new WebXmlConfiguration(),
+                    new MetaInfConfiguration(), 
+                    new FragmentConfiguration(), 
+                    new EnvConfiguration(),
+                    new PlusConfiguration(),
+                    new JettyWebXmlConfiguration() 
+                });
+
+        context.setParentLoaderPriority(true);
+        setExtraClassPath(context, baseContextFile);
+        
+        final ClassInheritanceMap map = new ClassInheritanceMap();
+        final ConcurrentHashSet<String> set = new ConcurrentHashSet<>();
+        set.add("org.carlspring.strongbox.config.StrongboxWebInitializer");
+        map.put("org.springframework.web.WebApplicationInitializer", set);     
+        context.setAttribute(AnnotationConfiguration.CLASS_INHERITANCE_MAP, map);
+        
         final File dir = new File("temp");
         //noinspection ResultOfMethodCallIgnored
         dir.mkdirs();
 
         context.setTempDirectory(dir);
-
+        
         server.setHandler(context);
 
         return server;
     }
 
-    public Server createWarServerInstance()
+    protected void setExtraClassPath(WebAppContext context,
+                                     File baseContextFile)
+        throws IOException
+    {
+        try (DirectoryStream<Path> dirStream = Files.newDirectoryStream(baseContextFile.toPath().resolve("WEB-INF/lib"),
+                                                                        "spring-web-*.jar"))
+        {
+            dirStream.forEach(p -> context.setExtraClasspath(p.toAbsolutePath().toString()));
+        }
+    }
+
+    public Server createWarServerInstance() throws IOException
     {
         Server server = new Server(getPort());
 
         WebAppContext context = new WebAppContext();
-        context.setDescriptor(context + "/WEB-INF/web.xml");
         context.setWar(getWar());
         context.setContextPath(getContextPath());
         context.setParentLoaderPriority(true);
-
+        
+        File baseContextFile = context.getBaseResource().getFile();
+        String baseContextPath = baseContextFile.getAbsolutePath();
+        context.setDescriptor(baseContextPath + "/WEB-INF/web.xml");
+        
+        context.setConfigurations(new Configuration[] 
+                { 
+                    new AnnotationConfiguration(),
+                    new WebInfConfiguration(), 
+                    new WebXmlConfiguration(),
+                    new MetaInfConfiguration(), 
+                    new FragmentConfiguration(), 
+                    new EnvConfiguration(),
+                    new PlusConfiguration(), 
+                    new JettyWebXmlConfiguration() 
+                });
+        
+        context.setParentLoaderPriority(true);
+        setExtraClassPath(context, baseContextFile);
+        
+        final ClassInheritanceMap map = new ClassInheritanceMap();
+        final ConcurrentHashSet<String> set = new ConcurrentHashSet<>();
+        set.add("org.carlspring.strongbox.config.StrongboxWebInitializer");
+        map.put("org.springframework.web.WebApplicationInitializer", set);      
+        context.setAttribute(AnnotationConfiguration.CLASS_INHERITANCE_MAP, map);        
+        
         final File dir = new File("target/jetty/tmp");
         //noinspection ResultOfMethodCallIgnored
         dir.mkdirs();
