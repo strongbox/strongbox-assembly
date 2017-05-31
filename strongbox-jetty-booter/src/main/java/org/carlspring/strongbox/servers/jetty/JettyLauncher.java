@@ -3,6 +3,9 @@ package org.carlspring.strongbox.servers.jetty;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.DirectoryStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
 
 import org.eclipse.jetty.annotations.AnnotationConfiguration;
 import org.eclipse.jetty.annotations.AnnotationConfiguration.ClassInheritanceMap;
@@ -53,7 +56,8 @@ public class JettyLauncher
         context.setResourceBase(getBasedir());
         context.setContextPath(getContextPath());
 
-        String baseContextPath = context.getBaseResource().getFile().getAbsolutePath();
+        File baseContextFile = context.getBaseResource().getFile();
+        String baseContextPath = baseContextFile.getAbsolutePath();
         context.setDescriptor(baseContextPath + "/WEB-INF/web.xml");
         
         context.setConfigurations(new Configuration[] 
@@ -69,7 +73,7 @@ public class JettyLauncher
                 });
 
         context.setParentLoaderPriority(true);
-        context.setExtraClasspath(baseContextPath + "/WEB-INF/lib/spring-web-4.3.6.RELEASE.jar");
+        setExtraClassPath(context, baseContextFile);
         
         final ClassInheritanceMap map = new ClassInheritanceMap();
         final ConcurrentHashSet<String> set = new ConcurrentHashSet<>();
@@ -88,6 +92,17 @@ public class JettyLauncher
         return server;
     }
 
+    protected void setExtraClassPath(WebAppContext context,
+                                     File baseContextFile)
+        throws IOException
+    {
+        try (DirectoryStream<Path> dirStream = Files.newDirectoryStream(baseContextFile.toPath().resolve("WEB-INF/lib"),
+                                                                        "spring-web-*.jar"))
+        {
+            dirStream.forEach(p -> context.setExtraClasspath(p.toAbsolutePath().toString()));
+        }
+    }
+
     public Server createWarServerInstance() throws IOException
     {
         Server server = new Server(getPort());
@@ -97,7 +112,8 @@ public class JettyLauncher
         context.setContextPath(getContextPath());
         context.setParentLoaderPriority(true);
         
-        String baseContextPath = context.getBaseResource().getFile().getAbsolutePath();
+        File baseContextFile = context.getBaseResource().getFile();
+        String baseContextPath = baseContextFile.getAbsolutePath();
         context.setDescriptor(baseContextPath + "/WEB-INF/web.xml");
         
         context.setConfigurations(new Configuration[] 
@@ -113,15 +129,13 @@ public class JettyLauncher
                 });
         
         context.setParentLoaderPriority(true);
-        context.setExtraClasspath(baseContextPath + "/WEB-INF/lib/spring-web-4.3.6.RELEASE.jar");
+        setExtraClassPath(context, baseContextFile);
         
         final ClassInheritanceMap map = new ClassInheritanceMap();
         final ConcurrentHashSet<String> set = new ConcurrentHashSet<>();
         set.add("org.carlspring.strongbox.config.StrongboxWebInitializer");
         map.put("org.springframework.web.WebApplicationInitializer", set);      
         context.setAttribute(AnnotationConfiguration.CLASS_INHERITANCE_MAP, map);        
-        
-        context.setExtraClasspath(context + "/WEB-INF/lib/spring-web-4.3.6.RELEASE.jar");        
         
         final File dir = new File("target/jetty/tmp");
         //noinspection ResultOfMethodCallIgnored
