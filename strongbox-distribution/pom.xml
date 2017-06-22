@@ -145,7 +145,7 @@
                                     <type>jar</type>
 
                                     <overWrite>true</overWrite>
-                                    <outputDirectory>${dir.strongbox.vault}</outputDirectory>
+                                    <outputDirectory>${dir.strongbox.standalone}</outputDirectory>
                                     <includes>etc/conf/strongbox.xml,META-INF/spring/**</includes>
                                 </artifactItem>
                             </artifactItems>
@@ -173,6 +173,27 @@
                         </configuration>
                     </execution>
                     <execution>
+                        <id>unpack-user-management-resources</id>
+                        <phase>process-resources</phase>
+                        <goals>
+                            <goal>unpack</goal>
+                        </goals>
+                        <configuration>
+                            <artifactItems>
+                                <artifactItem>
+                                    <groupId>${project.groupId}</groupId>
+                                    <artifactId>strongbox-user-management</artifactId>
+                                    <version>${project.version}</version>
+                                    <type>jar</type>
+
+                                    <overWrite>true</overWrite>
+                                    <outputDirectory>${dir.strongbox.standalone}</outputDirectory>
+                                    <includes>etc/**</includes>
+                                </artifactItem>
+                            </artifactItems>
+                        </configuration>
+                    </execution>
+                    <execution>
                         <id>unpack-webapp</id>
                         <phase>process-resources</phase>
                         <goals>
@@ -186,7 +207,7 @@
                                     <version>${project.version}</version>
                                     <type>war</type>
 
-                                        <overWrite>true</overWrite>
+                                    <overWrite>true</overWrite>
                                     <outputDirectory>${dir.strongbox.standalone}/webapp</outputDirectory>
                                     <excludes>META-INF/MANIFEST.MF,META-INF/maven/**</excludes>
                                     <includes>**/**</includes>
@@ -290,11 +311,14 @@
                                 <systemProperties>
                                     <systemProperty>appserver.home=.</systemProperty>
                                     <systemProperty>appserver.base=%STRONGBOX_HOME%</systemProperty>
-                                    <systemProperty>strongbox.vault=../strongbox-vault</systemProperty>
-                                    <systemProperty>logging.config.file=%STRONGBOX_HOME%/etc/logback.xml</systemProperty>
                                     <systemProperty>ehcache.disk.store.dir=../strongbox-vault/cache</systemProperty>
+                                    <systemProperty>strongbox.home=%STRONGBOX_HOME%</systemProperty>
+                                    <systemProperty>strongbox.vault=../strongbox-vault</systemProperty>
+                                    <systemProperty>strongbox.storage.booter.basedir=../strongbox-vault/storages</systemProperty>
+                                    <systemProperty>logging.config.file=%STRONGBOX_HOME%/etc/logback.xml</systemProperty>
+                                    <systemProperty>logging.dir=../strongbox-vault/logs</systemProperty>
                                     <systemProperty>jetty.logs=%STRONGBOX_HOME%/logs</systemProperty>
-                                    <systemProperty>java.io.tmpdir=%STRONGBOX_HOME%/temp</systemProperty>
+                                    <systemProperty>java.io.tmpdir=%STRONGBOX_HOME%/tmp</systemProperty>
                                 </systemProperties>
                             </jvmSettings>
                         </daemon>
@@ -322,8 +346,9 @@
                                 <copy todir="${dir.strongbox.standalone}">
                                     <fileset dir="${project.build.directory}/generated-resources/appassembler/jsw/strongbox"/>
                                 </copy>
+                                <mkdir dir="${dir.strongbox.vault}/"/>
+                                <mkdir dir="${dir.strongbox.standalone}/tmp"/>
                                 <mkdir dir="${dir.strongbox.standalone}/logs"/>
-                                <mkdir dir="${dir.strongbox.standalone}/temp"/>
                             </tasks>
                         </configuration>
                         <goals>
