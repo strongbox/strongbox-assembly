@@ -13,22 +13,14 @@ import org.eclipse.jetty.plus.webapp.EnvConfiguration;
 import org.eclipse.jetty.plus.webapp.PlusConfiguration;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.util.ConcurrentHashSet;
-import org.eclipse.jetty.webapp.Configuration;
-import org.eclipse.jetty.webapp.FragmentConfiguration;
-import org.eclipse.jetty.webapp.JettyWebXmlConfiguration;
-import org.eclipse.jetty.webapp.MetaInfConfiguration;
-import org.eclipse.jetty.webapp.WebAppContext;
-import org.eclipse.jetty.webapp.WebInfConfiguration;
-import org.eclipse.jetty.webapp.WebXmlConfiguration;
+import org.eclipse.jetty.webapp.*;
 
 /**
  * @author mtodorov
  */
 public class JettyLauncher
 {
-
-    // TODO: Get this from the strongbox.xml
-    private int port = 48080;
+    private int port;
 
     private String basedir;
 
@@ -41,6 +33,9 @@ public class JettyLauncher
 
     public JettyLauncher()
     {
+        // TODO: Get this from the strongbox.xml
+        port = System.getProperty("strongbox.port") != null ? Integer.parseInt(System.getProperty("strongbox.port")) :
+               48080;
     }
 
     public JettyLauncher(String basedir)
