@@ -319,6 +319,8 @@
                                     <systemProperty>logging.dir=../strongbox-vault/logs</systemProperty>
                                     <systemProperty>jetty.logs=%STRONGBOX_HOME%/logs</systemProperty>
                                     <systemProperty>java.io.tmpdir=%STRONGBOX_HOME%/tmp</systemProperty>
+                                    <systemProperty>strongbox.port=48080</systemProperty>
+                                    <systemProperty>strongbox.orientdb.port=2424</systemProperty>
                                 </systemProperties>
                             </jvmSettings>
                         </daemon>
