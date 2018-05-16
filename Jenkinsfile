@@ -14,6 +14,9 @@ pipeline {
             customWorkspace workspace().getUniqueWorkspacePath()
         }
     }
+    parameters {
+        booleanParam(defaultValue: true, description: 'Send email notification?', name: 'NOTIFY_EMAIL')
+    }
     options {
         timeout(time: 2, unit: 'HOURS')
         disableConcurrentBuilds()
