@@ -3,13 +3,15 @@
 def SERVER_ID = 'carlspring-oss-snapshots'
 def SERVER_URL = 'https://dev.carlspring.org/nexus/content/repositories/carlspring-oss-snapshots/'
 
-def workspaceUtils = new org.carlspring.jenkins.workspace.WorkspaceUtils();
+// Notification settings for "master" and "branch/pr"
+def notifyMaster = [notifyAdmins: true, recipients: [culprits(), requestor()]]
+def notifyBranch = [recipients: [brokenTestsSuspects(), requestor()]]
 
 pipeline {
     agent {
         node {
             label 'alpine:jdk8-mvn-3.5'
-            customWorkspace workspaceUtils.generateUniqueWorkspacePath()
+            customWorkspace workspace().getUniqueWorkspacePath()
         }
     }
     options {
@@ -20,21 +22,15 @@ pipeline {
         stage('Node')
         {
             steps {
-                sh "cat /etc/node"
-                sh "cat /etc/os-release"
-                sh "mvn --version"
+                nodeInfo("mvn")
             }
         }
         stage('Building...')
         {
             steps {
-                withMaven(mavenLocalRepo: workspaceUtils.generateM2LocalRepoPath(), mavenSettingsConfig: 'a5452263-40e5-4d71-a5aa-4fc94a0e6833')
+                withMavenPlus(mavenLocalRepo: workspace().getM2LocalRepoPath(), mavenSettingsConfig: 'a5452263-40e5-4d71-a5aa-4fc94a0e6833', timestamps: true)
                 {
-                    withEnv(['PATH+MVN_CMD=$MVN_CMD']) {
-                        timestamps {
-                            sh "mvn -U clean install -Dprepare.revision -Dmaven.test.failure.ignore=true"
-                        }
-                    }
+                    sh "mvn -U clean install -Dprepare.revision -Dmaven.test.failure.ignore=true"
                 }
             }
         }
@@ -43,13 +39,11 @@ pipeline {
                 expression { BRANCH_NAME == 'master' && (currentBuild.result == null || currentBuild.result == 'SUCCESS') }
             }
             steps {
-                withMaven(mavenLocalRepo: workspaceUtils.generateM2LocalRepoPath(), mavenSettingsConfig: 'a5452263-40e5-4d71-a5aa-4fc94a0e6833')
+                withMavenPlus(mavenLocalRepo: workspace().getM2LocalRepoPath(), mavenSettingsConfig: 'a5452263-40e5-4d71-a5aa-4fc94a0e6833')
                 {
-                    withEnv(['PATH+MVN_CMD=$MVN_CMD']) {
-                        sh "mvn package deploy:deploy" +
-                           " -Dmaven.test.skip=true" +
-                           " -DaltDeploymentRepository=${SERVER_ID}::default::${SERVER_URL}"
-                    }
+                    sh "mvn package deploy:deploy" +
+                       " -Dmaven.test.skip=true" +
+                       " -DaltDeploymentRepository=${SERVER_ID}::default::${SERVER_URL}"
                 }
             }
         }
@@ -58,16 +52,35 @@ pipeline {
                 expression { BRANCH_NAME == 'master' && (currentBuild.result == null || currentBuild.result == 'SUCCESS') }
             }
             steps {
-                withMaven(mavenLocalRepo: workspaceUtils.generateM2LocalRepoPath(), mavenSettingsConfig: 'a5452263-40e5-4d71-a5aa-4fc94a0e6833')
+                withMavenPlus(mavenLocalRepo: workspace().getM2LocalRepoPath(), mavenSettingsConfig: 'a5452263-40e5-4d71-a5aa-4fc94a0e6833')
                 {
-                    withEnv(['PATH+MVN_CMD=$MVN_CMD']) {
-                        sh "mvn package -Pdeploy-release-artifact-to-github -Dmaven.test.skip=true"
-                    }
+                    sh "mvn package -Pdeploy-release-artifact-to-github -Dmaven.test.skip=true"
                 }
             }
         }
     }
     post {
+        failure {
+            script {
+                if(params.NOTIFY_EMAIL) {
+                    notifyFailed((BRANCH_NAME == "master") ? notifyMaster : notifyBranch)
+                }
+            }
+        }
+        unstable {
+            script {
+                if(params.NOTIFY_EMAIL) {
+                    notifyUnstable((BRANCH_NAME == "master") ? notifyMaster : notifyBranch)
+                }
+            }
+        }
+        fixed {
+            script {
+                if(params.NOTIFY_EMAIL) {
+                    notifyFixed((BRANCH_NAME == "master") ? notifyMaster : notifyBranch)
+                }
+            }
+        }
         cleanup {
             // Cleanup workspace.
             cleanWs deleteDirs: true, externalDelete: 'rm -rf %s', notFailBuild: true
