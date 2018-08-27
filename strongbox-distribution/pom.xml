@@ -242,9 +242,6 @@
                             <id>strongbox</id>
                             <mainClass>org.carlspring.strongbox.servers.jetty.JettyLauncher</mainClass>
 
-                            <commandLineArguments>
-                                <commandLineArgument>-Djetty.port=48080</commandLineArgument>
-                            </commandLineArguments>
                             <platforms>
                                 <platform>jsw</platform>
                             </platforms>
@@ -308,7 +305,7 @@
                             </generatorConfigurations>
                             <jvmSettings>
                                 <initialMemorySize>256</initialMemorySize>
-                                <maxMemorySize>1024</maxMemorySize>
+                                <maxMemorySize>%STRONGBOX_JVM_XMX%</maxMemorySize>
 
                                 <systemProperties>
                                     <systemProperty>appserver.home=.</systemProperty>
